@@ -1,0 +1,19 @@
+{
+  "name": "am-virtual-lab-simulator",
+  "version": "1.0.0",
+  "description": "An interactive, professional Amplitude Modulation (AM) Virtual Lab and Simulator for Communication Engineering students.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve",
+    "dev": "npx serve"
+  },
+  "keywords": [
+    "amplitude-modulation",
+    "virtual-lab",
+    "communication-engineering",
+    "simulator",
+    "ece"
+  ],
+  "author": "Analog Communication Virtual Labs Team",
+  "license": "MIT"
+}
