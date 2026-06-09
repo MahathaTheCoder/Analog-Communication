@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Advanced Amplitude & Frequency Modulation (AM/FM) Virtual Lab and Simulator for Communication Engineering. Simulate AM, FM, DSB-SC, SSB, AWGN Noise, Bessel Spectrum Analyzer, 3D analytical helix, and voice modulation.">
+    <title>Advanced AM & FM Virtual Lab & Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">∿</div>
+                <div class="brand-title">
+                    <h1>AM & FM Virtual Lab & Simulator</h1>
+                    <p>ECE Analog Communication Systems Laboratory</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="tabs-navigation">
+                    <button id="tab-bench" class="tab-btn active">Simulation Bench</button>
+                    <button id="tab-lab" class="tab-btn">Lab Experiment Sheet</button>
+                </div>
+                <button id="theme-toggle" class="theme-switch-btn" aria-label="Toggle Theme" title="Toggle Theme">
+                    <svg id="theme-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-moon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="dashboard-grid">
+            <!-- Left Sidebar Controls -->
+            <aside class="panel no-print">
+                <!-- AM / FM Active Mode Selector -->
+                <div class="panel-section" style="border-bottom: 2px solid var(--accent-cyan); padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div class="panel-section-title">Modulation Mode</div>
+                    <div class="tabs-navigation" style="width: 100%; display: flex;">
+                        <button id="btn-mode-am" class="tab-btn active" style="flex: 1; text-align: center;">AM Mode</button>
+                        <button id="btn-mode-fm" class="tab-btn" style="flex: 1; text-align: center;">FM Mode</button>
+                    </div>
+                </div>
+
+                <!-- Modulation Scheme Selection (AM Only) -->
+                <div class="panel-section" id="section-am-scheme">
+                    <div class="panel-section-title">AM Modulation Scheme</div>
+                    <div class="control-group">
+                        <select id="select-modulation-scheme" class="custom-select">
+                            <option value="am-fc">Conventional AM (DSB-FC)</option>
+                            <option value="am-sc">Suppressed Carrier (DSB-SC)</option>
+                            <option value="ssb-sc">Single Sideband (SSB-SC)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Frequency Sensitivity Selection (FM Only, starts hidden) -->
+                <div class="panel-section hidden" id="section-fm-sensitivity">
+                    <div class="panel-section-title">FM Freq Sensitivity</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Sensitivity</span>
+                            <span class="symbol">k<sub>f</sub> (Hz/V)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-kf" min="10" max="100" step="5" value="50">
+                            <input type="number" id="num-kf" min="10" max="100" step="5" value="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AWGN Channel Noise Section -->
+                <div class="panel-section">
+                    <div class="panel-section-title">Channel Noise (AWGN)</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Signal-to-Noise Ratio</span>
+                            <span class="symbol" id="lbl-snr-val">Noiseless</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-snr" min="5" max="45" step="5" value="45">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Bench Presets -->
+                <div class="panel-section" id="section-am-presets">
+                    <div class="panel-section-title">AM Depth Presets</div>
+                    <div class="presets-grid">
+                        <button class="preset-btn active" id="preset-under">
+                            <span>Under Modulated</span>
+                            <span class="badge">m = 0.6</span>
+                        </button>
+                        <button class="preset-btn" id="preset-critical">
+                            <span>100% Modulated</span>
+                            <span class="badge">m = 1.0</span>
+                        </button>
+                        <button class="preset-btn" id="preset-over">
+                            <span>Over Modulated</span>
+                            <span class="badge">m = 1.4</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Carrier Wave Controls -->
+                <div class="panel-section">
+                    <div class="panel-section-title">Carrier RF Wave (c(t))</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Amplitude</span>
+                            <span class="symbol">A<sub>c</sub> (V)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-ac" min="1" max="10" step="0.1" value="5.0">
+                            <input type="number" id="num-ac" min="1" max="10" step="0.1" value="5.0">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Frequency</span>
+                            <span class="symbol">f<sub>c</sub> (Hz)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-fc" min="200" max="2500" step="10" value="1000">
+                            <input type="number" id="num-fc" min="200" max="2500" step="10" value="1000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Wave Controls -->
+                <div class="panel-section">
+                    <div class="panel-section-title">Message Baseband (m(t))</div>
+                    
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Waveform</span>
+                            <span class="symbol">m(t) Shape</span>
+                        </div>
+                        <div class="control-input-row">
+                            <select id="select-message-shape" class="custom-select">
+                                <option value="sine">Sinusoidal (Sine)</option>
+                                <option value="rectangular">Rectangular Wave</option>
+                                <option value="triangle">Triangle Wave</option>
+                                <option value="square">Square Wave</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Rectangular Wave Duty Cycle Controls -->
+                    <div class="control-group hidden" id="group-duty-cycle">
+                        <div class="control-label">
+                            <span>Duty Cycle</span>
+                            <span class="symbol">D (%)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-duty" min="10" max="90" step="5" value="25">
+                            <input type="number" id="num-duty" min="10" max="90" step="5" value="25">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Amplitude</span>
+                            <span class="symbol">A<sub>m</sub> (V)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-am" min="0" max="10" step="0.1" value="3.0">
+                            <input type="number" id="num-am" min="0" max="10" step="0.1" value="3.0">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Frequency</span>
+                            <span class="symbol">f<sub>m</sub> (Hz)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-fm" min="10" max="250" step="5" value="50">
+                            <input type="number" id="num-fm" min="10" max="250" step="5" value="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demodulator Filter RC Controls -->
+                <div class="panel-section">
+                    <div class="panel-section-title" id="lbl-demod-section-title">Envelope Demodulator</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Resistor</span>
+                            <span class="symbol">R (Ω)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-r" min="100" max="5000" step="50" value="1200">
+                            <input type="number" id="num-r" min="100" max="5000" step="50" value="1200">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Capacitor</span>
+                            <span class="symbol">C (µF)</span>
+                        </div>
+                        <div class="control-input-row">
+                            <input type="range" id="slider-c" min="0.1" max="10" step="0.1" value="2.0">
+                            <input type="number" id="num-c" min="0.1" max="10" step="0.1" value="2.0">
+                        </div>
+                    </div>
+                    <button class="scope-btn" id="btn-optimal-rc" style="width: 100%; justify-content: center; margin-top: 0.25rem;">
+                        ⚡ Calculate Optimal RC
+                    </button>
+                </div>
+
+                <!-- Real Audio voice Modulation -->
+                <div class="panel-section">
+                    <div class="panel-section-title">Acoustic Audio Modulator</div>
+                    <button class="scope-btn" id="btn-toggle-mic" style="width: 100%; justify-content: center; border-color: var(--accent-yellow); color: var(--accent-yellow);">
+                        🎙️ Enable Voice Input
+                    </button>
+                    <div id="mic-status-text" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem; text-align: center;">
+                        Inactive. Uses real microphone capture.
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Workspace Area -->
+            <main class="main-content">
+                <!-- VIEW 1: SIMULATION BENCH -->
+                <div id="view-bench" class="main-display">
+                    <!-- Calculations Cards Section -->
+                    <section class="calculations-summary">
+                        <div class="calc-card highlight" id="card-mod-index">
+                            <div>
+                                <div class="calc-card-title" id="lbl-mod-index-title">Modulation Index (m)</div>
+                                <div class="calc-card-value" id="val-mod-index">0.60</div>
+                            </div>
+                            <div class="calc-card-sub" id="val-mod-percent">60.0% Modulation</div>
+                        </div>
+                        <div class="calc-card" id="card-bandwidth">
+                            <div>
+                                <div class="calc-card-title" id="lbl-bandwidth-title">Transmitted Bandwidth</div>
+                                <div class="calc-card-value" id="val-bandwidth">100 Hz</div>
+                            </div>
+                            <div class="calc-card-sub" id="lbl-bandwidth-formula">BW = 2 &times; f<sub>m</sub></div>
+                        </div>
+                        <div class="calc-card" id="card-sidebands">
+                            <div>
+                                <div class="calc-card-title" id="lbl-sidebands-title">Spectral Spikes</div>
+                                <div class="calc-card-value" style="font-size: 1rem; line-height: 1.3;" id="val-sidebands">
+                                    USB: 1050 Hz<br>LSB: 950 Hz
+                                </div>
+                            </div>
+                            <div class="calc-card-sub" id="lbl-carrier-sub">Carrier f<sub>c</sub>: 1000 Hz</div>
+                        </div>
+                        <div class="calc-card" id="card-power">
+                            <div>
+                                <div class="calc-card-title" id="lbl-power-title">Transmission Power</div>
+                                <div class="calc-card-value" id="val-power">14.75 W</div>
+                            </div>
+                            <div class="calc-card-sub" id="val-power-pc">Carrier P<sub>c</sub>: 12.50 W</div>
+                        </div>
+                        <div class="calc-card" id="card-efficiency">
+                            <div>
+                                <div class="calc-card-title" id="lbl-efficiency-title">Efficiency (η)</div>
+                                <div class="calc-card-value" id="val-efficiency">15.3%</div>
+                            </div>
+                            <div class="calc-card-sub" id="val-power-sidebands">SB Power: 2.25 W</div>
+                        </div>
+                    </section>
+
+                    <!-- Dual-Monitor Display Setup (Time Domain & Frequency / 3D Analysis) -->
+                    <div class="displays-dual-grid">
+                        <!-- Monitor 1: Oscilloscope -->
+                        <section class="oscilloscope-box">
+                            <div class="scope-header">
+                                <div class="scope-title">
+                                    <div class="scope-status-light"></div>
+                                    <span>Virtual 4-Ch Time Domain DSO</span>
+                                </div>
+                                <div class="channel-selectors">
+                                    <label class="channel-check ch-msg active">
+                                        <input type="checkbox" id="chk-ch-msg" checked> Ch A
+                                    </label>
+                                    <label class="channel-check ch-car">
+                                        <input type="checkbox" id="chk-ch-car"> Ch B
+                                    </label>
+                                    <label class="channel-check ch-mod active">
+                                        <input type="checkbox" id="chk-ch-mod" checked> Ch C
+                                    </label>
+                                    <label class="channel-check ch-env active">
+                                        <input type="checkbox" id="chk-ch-env" checked> Ch D
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="scope-screen-wrapper">
+                                <canvas id="oscilloscope" class="scope-canvas"></canvas>
+                            </div>
+
+                            <div class="cursor-readings-bar">
+                                <div>Cursors: <span id="lbl-cursor-status">OFF</span></div>
+                                <div id="readout-y" class="hidden">Y1: <span id="val-cur-y1" class="cursor-reading-val">0.0V</span> | Y2: <span id="val-cur-y2" class="cursor-reading-val">0.0V</span> | ΔY: <span id="val-cur-dy" class="cursor-reading-val">0.0V</span></div>
+                                <div id="readout-x" class="hidden">X1: <span id="val-cur-x1" class="cursor-reading-val">0.0ms</span> | X2: <span id="val-cur-x2" class="cursor-reading-val">0.0ms</span> | ΔX: <span id="val-cur-dx" class="cursor-reading-val">0.0ms</span> | 1/ΔX: <span id="val-cur-freq" class="cursor-reading-val">0Hz</span></div>
+                            </div>
+
+                            <div class="scope-controls-strip">
+                                <div class="scope-control-unit">
+                                    <span class="scope-control-label">Time/Div:</span>
+                                    <div class="scope-knob-container">
+                                        <button class="scope-knob-arrow" id="btn-tdiv-down">◀</button>
+                                        <span class="scope-knob-val" id="lbl-tdiv">2.0 ms/div</span>
+                                        <button class="scope-knob-arrow" id="btn-tdiv-up">▶</button>
+                                    </div>
+                                </div>
+                                <div class="scope-control-unit">
+                                    <button class="scope-btn active" id="btn-toggle-grid">Grid</button>
+                                    <button class="scope-btn" id="btn-toggle-envelope">Ideal Env</button>
+                                </div>
+                                <div class="scope-control-unit">
+                                    <button class="scope-btn" id="btn-cursor-type">Cursors: Off</button>
+                                </div>
+                                <div class="scope-control-unit" style="margin-left: auto;">
+                                    <button class="scope-btn" id="btn-reset-pan">Reset Pan</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Monitor 2: Analysis (Spectrum & 3D Helix) -->
+                        <section class="oscilloscope-box">
+                            <div class="scope-header">
+                                <div class="tabs-navigation" style="padding: 0.15rem;">
+                                    <button id="btn-show-spectrum" class="tab-btn active" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">Spectrum Analyzer</button>
+                                    <button id="btn-show-3d" class="tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">3D Phase Helix</button>
+                                </div>
+                                <span class="scope-title" id="lbl-analysis-title">Frequency Domain spectrum</span>
+                            </div>
+
+                            <!-- Screen Container for Analysis -->
+                            <div class="scope-screen-wrapper">
+                                <!-- Spectrum Canvas -->
+                                <canvas id="canvas-spectrum" class="scope-canvas"></canvas>
+                                <!-- 3D Constellation Canvas (Hidden by default) -->
+                                <canvas id="canvas-3d" class="scope-canvas hidden"></canvas>
+                            </div>
+
+                            <!-- Readout / Status information for Analysis -->
+                            <div class="cursor-readings-bar" id="analysis-readout-bar">
+                                <div id="spectrum-readouts">Spikes: <span style="color: var(--accent-cyan);" id="lbl-spike-list">LSB, Carrier, USB</span></div>
+                                <div id="3d-readouts" class="hidden">Helix Rotation: <span style="color: var(--accent-purple);" id="lbl-3d-angle">Rotate to drag</span></div>
+                            </div>
+
+                            <!-- Analysis controls -->
+                            <div class="scope-controls-strip">
+                                <div id="spectrum-controls" class="scope-control-unit">
+                                    <span class="scope-control-label">Span:</span>
+                                    <span class="scope-knob-val" style="width: auto; padding: 0 0.5rem;" id="lbl-spec-span">0 Hz - 3000 Hz</span>
+                                </div>
+                                <div id="3d-controls" class="scope-control-unit hidden">
+                                    <button class="scope-btn" id="btn-toggle-spin">Auto-Rotate: ON</button>
+                                    <span class="scope-control-label" style="margin-left: 0.5rem;">Drag canvas to pivot manually</span>
+                                </div>
+                                <div style="margin-left: auto;">
+                                    <button class="scope-btn" id="btn-record-obs" style="border-color: var(--accent-green); color: var(--accent-green);">Record Table Row</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Schematic Circuit Probe Mode -->
+                    <section class="block-diagram-panel">
+                        <div class="panel-section-title" id="lbl-circuit-diagram-title">Hardware Circuit Probe Interface: Diode Envelope Detector</div>
+                        <div class="schematic-layout-grid">
+                            <!-- Circuit Schematic SVG -->
+                            <div class="schematic-svg-container">
+                                <svg viewBox="0 0 700 220" class="schematic-svg" id="schematic-diagram">
+                                    <!-- Input Node -->
+                                    <circle cx="40" cy="110" r="6" class="circuit-node"></circle>
+                                    <text x="35" y="90" class="circuit-text" id="lbl-schem-input">Mod In</text>
+                                    <path d="M 40 110 L 100 110" class="circuit-wire"></path>
+
+                                    <!-- Probe Point TP1 -->
+                                    <circle cx="80" cy="110" r="8" class="probe-node" id="probe-tp1" title="Probe TP1: Modulated Output"></circle>
+                                    <text x="75" y="130" class="probe-text">TP1</text>
+
+                                    <!-- Diode / Differentiator representation -->
+                                    <!-- We keep SVG standard and dynamically change labels if needed, or draw simple slope detector -->
+                                    <path d="M 100 110 L 130 110 M 130 95 L 130 125 L 155 110 Z M 155 95 L 155 125" class="circuit-wire" style="stroke-width: 2.5;"></path>
+                                    <text x="133" y="85" class="circuit-text" id="lbl-schem-diode">Diode (OA79)</text>
+                                    <path d="M 155 110 L 250 110" class="circuit-wire"></path>
+
+                                    <!-- Probe Point TP2 -->
+                                    <circle cx="200" cy="110" r="8" class="probe-node" id="probe-tp2" title="Probe TP2: Rectified Wave"></circle>
+                                    <text x="195" y="130" class="probe-text">TP2</text>
+
+                                    <!-- Resistor R (Parallel) -->
+                                    <path d="M 250 110 L 320 110" class="circuit-wire"></path>
+                                    <path d="M 320 110 L 320 130 L 310 135 L 330 145 L 310 155 L 330 165 L 310 175 L 320 180 L 320 200" class="circuit-wire" style="stroke-width: 2;"></path>
+                                    <text x="340" y="160" class="circuit-text">R (Resistor)</text>
+
+                                    <!-- Capacitor C (Parallel) -->
+                                    <path d="M 250 110 L 440 110" class="circuit-wire"></path>
+                                    <path d="M 440 110 L 440 145 M 420 145 L 460 145 M 420 155 L 460 155 M 440 155 L 440 200" class="circuit-wire" style="stroke-width: 2;"></path>
+                                    <text x="470" y="155" class="circuit-text">C (Capacitor)</text>
+
+                                    <!-- Probe Point TP3 -->
+                                    <circle cx="380" cy="110" r="8" class="probe-node" id="probe-tp3" title="Probe TP3: Output Envelope"></circle>
+                                    <text x="375" y="130" class="probe-text">TP3</text>
+
+                                    <!-- Output Node -->
+                                    <path d="M 440 110 L 520 110" class="circuit-wire"></path>
+                                    <circle cx="520" cy="110" r="6" class="circuit-node"></circle>
+                                    <text x="515" y="90" class="circuit-text" id="lbl-schem-output">Demod Out</text>
+
+                                    <!-- Ground wire -->
+                                    <path d="M 320 200 L 440 200 M 320 200 L 250 200 L 250 210 M 240 210 L 260 210 M 245 215 L 255 215 M 248 220 L 252 220" class="circuit-wire"></path>
+                                    <text x="270" y="215" class="circuit-text">GND</text>
+                                </svg>
+                            </div>
+
+                            <!-- Probing Info -->
+                            <div style="font-size: 0.85rem; padding: 0.5rem; display: flex; flex-direction: column; justify-content: center; gap: 0.5rem;">
+                                <div style="font-weight: 600; color: var(--accent-cyan);">🔴 Interactive Probe Instructions:</div>
+                                <p style="color: var(--text-secondary); line-height: 1.4; margin: 0;" id="lbl-probe-description">Click on probe points <strong>TP1</strong> (Modulated Output), <strong>TP2</strong> (Rectified Slope), or <strong>TP3</strong> (Demodulated Envelope) to view circuit signals.</p>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                                    <button class="scope-btn" id="btn-probe-tp1">Probe TP1</button>
+                                    <button class="scope-btn" id="btn-probe-tp2">Probe TP2</button>
+                                    <button class="scope-btn" id="btn-probe-tp3">Probe TP3</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Interactive Hardware Block Diagram -->
+                    <section class="block-diagram-panel">
+                        <div class="panel-section-title">Hardware Block Diagram (Click blocks to view theory)</div>
+                        <div class="diagram-container">
+                            <div class="diagram-block clickable-block" data-block="msg-source" style="border-color: var(--accent-yellow);">
+                                Modulating Source
+                                <span class="sub-label">m(t) = A<sub>m</sub>cos(ω<sub>m</sub>t)</span>
+                            </div>
+                            <div class="diagram-arrow">
+                                <div class="diagram-arrow-glowing" style="animation-delay: 0s;"></div>
+                            </div>
+                            <div class="vertical-path-container">
+                                <div class="diagram-block mixer clickable-block" data-block="modulator" style="border-color: var(--accent-green);">
+                                    ×
+                                    <span style="font-size: 0.65rem; font-weight: normal; margin-top: 2px;" id="lbl-block-modulator">Modulator</span>
+                                </div>
+                                <div class="diagram-arrow arrow-vertical">
+                                    <div class="diagram-arrow-glowing" style="animation-delay: 0.5s;"></div>
+                                </div>
+                                <div class="diagram-block clickable-block" data-block="carrier-osc" style="border-color: var(--accent-cyan); width: 110px; padding: 0.5rem;">
+                                    Carrier Osc.
+                                    <span class="sub-label">c(t) = A<sub>c</sub>cos(ω<sub>c</sub>t)</span>
+                                </div>
+                            </div>
+                            <div class="diagram-arrow">
+                                <div class="diagram-arrow-glowing" style="animation-delay: 1s;"></div>
+                            </div>
+                            <div class="diagram-block clickable-block" data-block="channel" style="border-color: var(--accent-purple);">
+                                Noise Channel
+                                <span class="sub-label">AWGN (SNR Slider)</span>
+                            </div>
+                            <div class="diagram-arrow">
+                                <div class="diagram-arrow-glowing" style="animation-delay: 1.5s;"></div>
+                            </div>
+                            <div class="diagram-block clickable-block" data-block="demodulator" style="border-color: var(--accent-magenta);">
+                                Diode Detector
+                                <span class="sub-label" id="lbl-block-demodulator">RC Demodulator</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- VIEW 2: LAB EXPERIMENT SHEET -->
+                <div id="view-lab" class="lab-container hidden">
+                    <!-- Object, Theory, Procedure -->
+                    <article class="lab-section-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                            <h2 style="border: none; margin: 0;">🧪 Experiment 1: Amplitude and Frequency Modulation/Demodulation</h2>
+                            <button class="scope-btn no-print" id="btn-print-report" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">📥 Export Lab Report (PDF)</button>
+                        </div>
+                        
+                        <h3>1. Objective</h3>
+                        <p>To study and simulate Amplitude Modulation (Conventional AM, DSB-SC, SSB-SC) and Frequency Modulation (FM). To observe their time-domain waveforms, calculate parameters (modulation index $m$, frequency deviation $\Delta f$, modulation index $\beta$), analyze their frequency spectra, introduce channel noise, and perform envelope detection (including FM slope detection) to retrieve baseband messages.</p>
+
+                        <h3>2. Technical Reference & Equations</h3>
+                        <p><strong>A. Amplitude Modulation:</strong></p>
+                        <ul>
+                            <li><strong>Conventional AM (DSB-FC)</strong>: The envelope tracks $m(t)$ directly.
+                                <span class="math-formula">s<sub>AM</sub>(t) = [A<sub>c</sub> + A<sub>m</sub> cos(2π f<sub>m</sub> t)] cos(2π f<sub>c</sub> t)</span>
+                            </li>
+                            <li><strong>Double Sideband Suppressed Carrier (DSB-SC)</strong>: Suppresses carrier power.
+                                <span class="math-formula">s<sub>DSB</sub>(t) = A<sub>m</sub> A<sub>c</sub> cos(2π f<sub>m</sub> t) cos(2π f<sub>c</sub> t)</span>
+                            </li>
+                            <li><strong>Single Sideband (SSB-SC)</strong>: Suppresses carrier and one sideband, saving 50% bandwidth and power.
+                                <span class="math-formula">s<sub>SSB</sub>(t) = (A<sub>c</sub>A<sub>m</sub> / 2) cos(2π(f<sub>c</sub> + f<sub>m</sub>)t)</span>
+                            </li>
+                        </ul>
+
+                        <p><strong>B. Frequency Modulation (FM):</strong></p>
+                        <p>In FM, the instantaneous frequency varies linearly with the message signal. The mathematical expression is:</p>
+                        <span class="math-formula">s<sub>FM</sub>(t) = A<sub>c</sub> cos(2π f<sub>c</sub> t + β sin(2π f<sub>m</sub> t))</span>
+                        <p>Where the **Modulation Index (β)** and **Frequency Deviation (Δf)** are:</p>
+                        <span class="math-formula">β = Δf / f<sub>m</sub> &nbsp;&nbsp;&nbsp; where &nbsp; Δf = k<sub>f</sub> &times; A<sub>m</sub></span>
+                        <p>By **Carson's Rule**, the bandwidth is approximated by:</p>
+                        <span class="math-formula">BW = 2 (Δf + f<sub>m</sub>) = 2 f<sub>m</sub> (β + 1)</span>
+                        <p>In FM, the total transmitted power is always constant and equal to the unmodulated carrier power: <strong>P<sub>t</sub> = A<sub>c</sub><sup>2</sup> / 2</strong>.</p>
+
+                        <p><strong>C. Demodulation Details:</strong></p>
+                        <ul>
+                            <li>AM uses a simple diode rectifier followed by parallel RC low-pass filter: <strong>RC ≤ √ (1 - m<sup>2</sup>) / (m · 2π f<sub>m</sub>)</strong>.</li>
+                            <li>FM utilizes a **Slope Detector** (a differentiator circuit that converts FM frequency deviations into AM envelope changes), followed by the diode envelope detector.</li>
+                        </ul>
+
+                        <h3>3. Laboratory Steps</h3>
+                        <ol>
+                            <li>Set mode to <strong>AM Mode</strong>. Select the <strong>Under Modulation</strong> preset. Measure modulation index and log the parameters.</li>
+                            <li>Switch the mode to <strong>FM Mode</strong>. Vary the Message Amplitude $A_m$ and Frequency Sensitivity $k_f$. Notice how the carrier wave compresses (higher frequency) during positive peaks of the modulating signal and expands (lower frequency) during negative peaks.</li>
+                            <li>Observe the FM spectrum analyzer. As you increase the modulation index $\beta$, notice that multiple sideband spikes appear spaced by $f_m$, and the carrier spike at $f_c$ shrinks. Find the value of $\beta$ where the carrier spike first disappears (at $\beta \approx 2.40$).</li>
+                            <li>Check the 3D analytical helix visualizer in FM mode. Notice that the helix radius is constant ($A_c$), but the spacing of the turns changes dynamically.</li>
+                            <li>Click <strong>Export Lab Report (PDF)</strong> to download your lab report.</li>
+                        </ol>
+                    </article>
+
+                    <!-- Interactive Observation Table -->
+                    <section class="lab-section-card">
+                        <h2>📊 Laboratory Observation Table</h2>
+                        <p class="no-print">Use the buttons on the Simulation Bench to record live parameters. Data in this table will be formatted directly into your final printout report.</p>
+                        
+                        <div class="obs-table-container">
+                            <table class="obs-table" id="table-observations">
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Mode</th>
+                                        <th>Type</th>
+                                        <th>Ac (V)</th>
+                                        <th>Am (V)</th>
+                                        <th>Mod. Index (m/β)</th>
+                                        <th>fc (Hz)</th>
+                                        <th>fm (Hz)</th>
+                                        <th>SNR (dB)</th>
+                                        <th>Total Power (W)</th>
+                                        <th>Demod Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic rows loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="obs-controls no-print">
+                            <button class="scope-btn" id="btn-clear-table">🗑️ Clear Table</button>
+                            <button class="scope-btn" id="btn-export-csv" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">📥 Export to CSV</button>
+                        </div>
+                    </section>
+
+                    <!-- Viva Voce Quiz Section -->
+                    <section class="lab-section-card no-print">
+                        <h2>🧠 Viva Voce & Concept Review</h2>
+                        <p>Complete this conceptual assessment to verify your laboratory comprehension. Correct selections yield explanations.</p>
+                        
+                        <form id="quiz-form">
+                            <!-- Q1 -->
+                            <div class="quiz-question-box">
+                                <div class="quiz-question-text">1. Why does an envelope detector fail to demodulate a DSB-SC signal correctly?</div>
+                                <div class="quiz-options">
+                                    <label class="quiz-option-label" data-q="1" data-opt="a">
+                                        <input type="radio" name="q1" value="a"> (a) The bandwidth is too narrow.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="1" data-opt="b">
+                                        <input type="radio" name="q1" value="b"> (b) The envelope of DSB-SC does not follow the message due to phase reversals at zero-crossings.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="1" data-opt="c">
+                                        <input type="radio" name="q1" value="c"> (c) The carrier frequency is too high.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="1" data-opt="d">
+                                        <input type="radio" name="q1" value="d"> (d) The signal power is too low to turn on the diode.
+                                    </label>
+                                </div>
+                                <div class="quiz-feedback" id="feedback-q1"></div>
+                            </div>
+
+                            <!-- Q2 -->
+                            <div class="quiz-question-box">
+                                <div class="quiz-question-text">2. According to Carson's Rule, what is the approximate bandwidth (BW) of an FM signal with modulation index &beta; and message frequency f<sub>m</sub>?</div>
+                                <div class="quiz-options">
+                                    <label class="quiz-option-label" data-q="2" data-opt="a">
+                                        <input type="radio" name="q2" value="a"> (a) 2 &times; f<sub>m</sub>
+                                    </label>
+                                    <label class="quiz-option-label" data-q="2" data-opt="b">
+                                        <input type="radio" name="q2" value="b"> (b) 2 &times; f<sub>m</sub> &times; (&beta; + 1)
+                                    </label>
+                                    <label class="quiz-option-label" data-q="2" data-opt="c">
+                                        <input type="radio" name="q2" value="c"> (c) &beta; &times; f<sub>m</sub>
+                                    </label>
+                                    <label class="quiz-option-label" data-q="2" data-opt="d">
+                                        <input type="radio" name="q2" value="d"> (d) 2 &times; &Delta;f
+                                    </label>
+                                </div>
+                                <div class="quiz-feedback" id="feedback-q2"></div>
+                            </div>
+
+                            <!-- Q3 -->
+                            <div class="quiz-question-box">
+                                <div class="quiz-question-text">3. What bandwidth is saved by transmitting SSB-SC compared to conventional DSB-FC AM?</div>
+                                <div class="quiz-options">
+                                    <label class="quiz-option-label" data-q="3" data-opt="a">
+                                        <input type="radio" name="q3" value="a"> (a) 25% bandwidth saved.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="3" data-opt="b">
+                                        <input type="radio" name="q3" value="b"> (b) 50% bandwidth saved (requires only f<sub>m</sub> instead of 2 &times; f<sub>m</sub>).
+                                    </label>
+                                    <label class="quiz-option-label" data-q="3" data-opt="c">
+                                        <input type="radio" name="q3" value="c"> (c) 75% bandwidth saved.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="3" data-opt="d">
+                                        <input type="radio" name="q3" value="d"> (d) No bandwidth is saved; only power is saved.
+                                    </label>
+                                </div>
+                                <div class="quiz-feedback" id="feedback-q3"></div>
+                            </div>
+
+                            <!-- Q4 -->
+                            <div class="quiz-question-box">
+                                <div class="quiz-question-text">4. How does the total transmitted power of an FM signal change when the modulation index (&beta;) increases from 0.5 to 3.0?</div>
+                                <div class="quiz-options">
+                                    <label class="quiz-option-label" data-q="4" data-opt="a">
+                                        <input type="radio" name="q4" value="a"> (a) It increases quadratically because sideband power increases.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="4" data-opt="b">
+                                        <input type="radio" name="q4" value="b"> (b) It remains completely constant (P<sub>t</sub> = A<sub>c</sub><sup>2</sup> / 2).
+                                    </label>
+                                    <label class="quiz-option-label" data-q="4" data-opt="c">
+                                        <input type="radio" name="q4" value="c"> (c) It decreases because carrier energy is suppressed.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="4" data-opt="d">
+                                        <input type="radio" name="q4" value="d"> (d) It drops to zero when the carrier spike disappears.
+                                    </label>
+                                </div>
+                                <div class="quiz-feedback" id="feedback-q4"></div>
+                            </div>
+
+                            <!-- Q5 -->
+                            <div class="quiz-question-box">
+                                <div class="quiz-question-text">5. In FM demodulation, what is the role of the differentiator circuit inside a Slope Detector?</div>
+                                <div class="quiz-options">
+                                    <label class="quiz-option-label" data-q="5" data-opt="a">
+                                        <input type="radio" name="q5" value="a"> (a) To convert frequency deviations into proportional amplitude variations (AM).
+                                    </label>
+                                    <label class="quiz-option-label" data-q="5" data-opt="b">
+                                        <input type="radio" name="q5" value="b"> (b) To filter out Gaussian noise spikes.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="5" data-opt="c">
+                                        <input type="radio" name="q5" value="c"> (c) To shift the carrier frequency to zero.
+                                    </label>
+                                    <label class="quiz-option-label" data-q="5" data-opt="d">
+                                        <input type="radio" name="q5" value="d"> (d) To integrate the baseband signal.
+                                    </label>
+                                </div>
+                                <div class="quiz-feedback" id="feedback-q5"></div>
+                            </div>
+
+                            <button type="button" class="scope-btn" id="btn-submit-quiz" style="width: 100%; justify-content: center; padding: 0.75rem;">
+                                Submit Assessment Answers
+                            </button>
+                        </form>
+
+                        <div class="quiz-score-card" id="quiz-score-card">
+                            <div>Your Viva Assessment Score:</div>
+                            <div class="quiz-score-num" id="quiz-score-num">0 / 5</div>
+                            <div id="quiz-score-summary">Review the feedback below and try again.</div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals for block explanations -->
+    <div id="block-modal" class="modal-overlay hidden no-print">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Block Details</h3>
+                <button class="close-modal-btn" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body-content">
+                <!-- Dynamic block info here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Script -->
+    <script src="app.js"></script>
+</body>
+</html>
